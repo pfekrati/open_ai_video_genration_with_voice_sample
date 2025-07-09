@@ -1,0 +1,9 @@
+openai
+python-dotenv
+azure-identity
+azure-keyvault-secrets
+moviepy
+streamlit
+requests
+pillow
+python-dotenv
