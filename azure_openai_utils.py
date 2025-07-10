@@ -26,17 +26,23 @@ class AzureOpenAIClient:
     def __init__(self):
         """Initialize the Azure OpenAI client with configuration from environment variables."""
         # Load configuration from environment variables
+        # Load main Azure OpenAI configuration
         self.api_key = os.getenv("AZURE_OPENAI_KEY")
         self.api_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         self.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
         self.gpt_deployment_name = os.getenv("GPT_DEPLOYMENT_NAME")
-        self.tts_deployment_name = os.getenv("TTS_DEPLOYMENT_NAME")
         self.sora_deployment_name = os.getenv("SORA_DEPLOYMENT_NAME")
-        
+
+        # Load TTS-specific configuration (can be different endpoint/key)
+        self.tts_api_key = os.getenv("AZURE_OPENAI_TTS_API_KEY")
+        self.tts_endpoint = os.getenv("AZURE_OPENAI_TTS_ENDPOINT")
+        self.tts_deployment_name = os.getenv("TTS_DEPLOYMENT_NAME")
+
         # Validate required configuration
         required_vars = [
             self.api_key, self.api_endpoint, self.api_version,
-            self.gpt_deployment_name, self.tts_deployment_name, self.sora_deployment_name
+            self.gpt_deployment_name, self.sora_deployment_name,
+            self.tts_api_key, self.tts_endpoint, self.tts_deployment_name
         ]
         if not all(required_vars):
             logger.error("Missing required Azure OpenAI configuration (including TTS-specific variables). Please check your .env file.")
@@ -156,12 +162,12 @@ class AzureOpenAIClient:
         """
         try:
             # Construct the API request to TTS endpoint
-            tts_url = f"{self.api_endpoint}/openai/deployments/{self.tts_deployment_name}/audio/speech?api-version=2025-03-01-preview"
+            tts_url = f"{self.tts_endpoint}/openai/deployments/{self.tts_deployment_name}/audio/speech?api-version=2025-03-01-preview"
             
             headers = {
-                "api-key": self.api_key,
+                "api-key": self.tts_api_key,
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}"
+                "Authorization": f"Bearer {self.tts_api_key}"
             }
             
             data = {
@@ -199,14 +205,9 @@ class AzureOpenAIClient:
         try:
             # Create system message for Sora instruction generation
             system_message = """
-            You are an expert at creating prompts for AI video generation models like Sora. Convert the provided narrative into detailed 
+            You are an expert at creating prompts for AI video generation models like Sora. Convert the provided narrative into a brief one line 
             instructions that will produce a high-quality 20-second video sequence.
             
-            Your instructions should:
-            1. Include specific details about visual elements, lighting, and atmosphere
-            2. Mention any specific visual styles or references
-            3. Be optimized for a 20-second video
-
             Respond with just the Sora instructions, without any additional commentary.
             """
             

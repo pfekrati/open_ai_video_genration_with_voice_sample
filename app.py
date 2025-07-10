@@ -123,7 +123,7 @@ def main():
             timestamp = time.strftime("%Y%m%d-%H%M%S")
             
             # Step 5: Combine video and audio
-            status_text.text("Finalizing: Combining video and audio...")``
+            status_text.text("Finalizing: Combining video and audio...")
             final_video_path = str(OUTPUT_DIR / f"final_video_{timestamp}.mp4")
             final_path = combine_video_and_audio(video_url, audio_data, final_video_path)
             progress_bar.progress(100)
