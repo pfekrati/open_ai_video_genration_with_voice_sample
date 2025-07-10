@@ -7,7 +7,8 @@ import os
 import logging
 import tempfile
 from typing import Optional
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
+# from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, AudioFileClip
+from moviepy.editor import *
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

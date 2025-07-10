@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional
 import requests
 from openai import AzureOpenAI
 from dotenv import load_dotenv
+import uuid
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -31,16 +32,11 @@ class AzureOpenAIClient:
         self.gpt_deployment_name = os.getenv("GPT_DEPLOYMENT_NAME")
         self.tts_deployment_name = os.getenv("TTS_DEPLOYMENT_NAME")
         self.sora_deployment_name = os.getenv("SORA_DEPLOYMENT_NAME")
-        # TTS specific configuration
-        self.tts_api_key = os.getenv("AZURE_OPENAI_TTS_KEY")
-        self.tts_endpoint = os.getenv("AZURE_OPENAI_TTS_ENDPOINT")
-        self.tts_api_version = os.getenv("AZURE_OPENAI_TTS_API_VERSION")
         
         # Validate required configuration
         required_vars = [
             self.api_key, self.api_endpoint, self.api_version,
-            self.gpt_deployment_name, self.tts_deployment_name, self.sora_deployment_name,
-            self.tts_api_key, self.tts_endpoint, self.tts_api_version
+            self.gpt_deployment_name, self.tts_deployment_name, self.sora_deployment_name
         ]
         if not all(required_vars):
             logger.error("Missing required Azure OpenAI configuration (including TTS-specific variables). Please check your .env file.")
@@ -72,13 +68,13 @@ class AzureOpenAIClient:
         try:
             # Create system message for narrative generation
             system_message = """
-            You are an expert video script writer. Create a compelling narrative for a 20-second teaser video based on the user's prompt.
+            You are an expert video script writer. Create a compelling script for voice over video for a 15-second teaser video based on the user's prompt.
             Your narrative should:
-            1. Be concise and impactful (approximately 60-80 words)
+            1. Be concise and impactful (approximately 40 words)
             2. Have a clear beginning, middle, and end
             3. Use vivid, descriptive language that can be visually represented
             4. Have a natural flow for narration
-            5. Be optimized for a 20-second duration
+            5. Be optimized for less than 15-second duration
             
             Respond with just the narrative text, without any additional commentary.
             """
@@ -102,6 +98,50 @@ class AzureOpenAIClient:
             logger.error(f"Error generating narrative: {str(e)}")
             raise
     
+    def generate_tts_instructions(self, narrative: str, max_tokens: int = 300) -> str:
+        """
+        Generate instructions for text-to-speech delivery based on the narrative.
+        
+        Args:
+            narrative: The narrative text for which to generate TTS instructions
+            max_tokens: Maximum tokens for the completion
+            
+        Returns:
+            Instructions for TTS delivery including tone, emphasis, and pacing
+        """
+        try:
+            # Create system message for TTS instruction generation
+            system_message = """
+            You are an expert voice coach. Create instructions for text-to-speech delivery based on the provided narrative.
+            Your instructions should:
+            1. Suggest the appropriate tone and emotion for the narration
+            2. Indicate where emphasis should be placed
+            3. Note where pauses would enhance the delivery
+            4. Recommend voice modulation for different parts of the narrative
+            5. Be clear and specific to enhance the audio quality
+            
+            Respond with just the TTS instructions, without any additional commentary.
+            """
+            
+            # Call Azure OpenAI API
+            response = self.client.chat.completions.create(
+                model=self.gpt_deployment_name,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": narrative}
+                ],
+                max_tokens=max_tokens,
+                temperature=0.6
+            )
+            
+            instructions = response.choices[0].message.content.strip()
+            logger.info(f"Successfully generated TTS instructions ({len(instructions.split())} words)")
+            return instructions
+        
+        except Exception as e:
+            logger.error(f"Error generating TTS instructions: {str(e)}")
+            raise
+
     def generate_tts(self, text: str, voice: str = "alloy", output_format: str = "mp3") -> bytes:
         """
         Generate high-quality text-to-speech audio using Azure OpenAI TTS HD.
@@ -120,12 +160,14 @@ class AzureOpenAIClient:
             
             headers = {
                 "api-key": self.api_key,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}"
             }
             
             data = {
-                "model": "tts-hd",
+                "model": "gpt-4o-mini-tts",
                 "input": text,
+                "instructions": self.generate_tts_instructions(text),
                 "voice": voice,
                 "response_format": output_format
             }
@@ -161,12 +203,10 @@ class AzureOpenAIClient:
             instructions that will produce a high-quality 20-second video sequence.
             
             Your instructions should:
-            1. Break down the narrative into clear visual scenes
-            2. Include specific details about visual elements, camera movements, lighting, and atmosphere
-            3. Specify any scene transitions
-            4. Mention any specific visual styles or references
-            5. Be optimized for a 20-second video
-            
+            1. Include specific details about visual elements, lighting, and atmosphere
+            2. Mention any specific visual styles or references
+            3. Be optimized for a 20-second video
+
             Respond with just the Sora instructions, without any additional commentary.
             """
             
@@ -189,7 +229,7 @@ class AzureOpenAIClient:
             logger.error(f"Error generating Sora instructions: {str(e)}")
             raise
     
-    def generate_video(self, instructions: str, duration_seconds: int = 20, width: int = 1024, height: int = 576, output_path: str = "output.mp4") -> str:
+    def generate_video(self, instructions: str, duration_seconds: int = 20, width: int = 854, height: int = 480, output_path: str = "output") -> str:
         """
         Generate video using Azure OpenAI Sora model.
         
@@ -205,10 +245,10 @@ class AzureOpenAIClient:
         """
         try:
             # 1. Create a video generation job
-            create_url = f"{self.tts_endpoint}/openai/v1/video/generations/jobs?api-version={self.tts_api_version}"
-            
+            create_url = f"{self.api_endpoint}/openai/v1/video/generations/jobs?api-version=preview"
+
             headers = {
-                "api-key": self.tts_api_key,
+                "Api-key": self.api_key,
                 "Content-Type": "application/json"
             }
             
@@ -217,6 +257,8 @@ class AzureOpenAIClient:
                 "width": width,
                 "height": height,
                 "n_seconds": duration_seconds,
+                "n_variants": 1,
+                "type": "video_gen",
                 "model": "sora"
             }
             
@@ -228,7 +270,7 @@ class AzureOpenAIClient:
             logger.info(f"Job created: {job_id}")
             
             # 2. Poll for job status
-            status_url = f"{self.api_endpoint}/openai/v1/video/generations/jobs/{job_id}?api-version={self.api_version}"
+            status_url = f"{self.api_endpoint}/openai/v1/video/generations/jobs/{job_id}?api-version=preview"
             status = None
             
             while status not in ("succeeded", "failed", "cancelled"):
@@ -243,14 +285,21 @@ class AzureOpenAIClient:
                 if generations:
                     logger.info("Video generation succeeded")
                     generation_id = generations[0].get("id")
-                    video_url = f"{self.api_endpoint}/openai/v1/video/generations/{generation_id}/content/video?api-version={self.api_version}"
+                    video_url = f"{self.api_endpoint}/openai/v1/video/generations/{generation_id}/content/video?api-version=preview"
                     
                     video_response = requests.get(video_url, headers=headers)
                     if video_response.ok:
-                        with open(output_path, "wb") as file:
+                        # Generate a random filename with .mp4 extension
+                        filename = f"{uuid.uuid4()}.mp4"
+                        # Ensure output directory exists
+                        os.makedirs(output_path, exist_ok=True)
+                        # Combine directory and filename
+                        full_path = os.path.join(output_path, filename)
+                        
+                        with open(full_path, "wb") as file:
                             file.write(video_response.content)
-                        logger.info(f'Generated video saved as "{output_path}"')
-                        return output_path
+                        logger.info(f'Generated video saved as "{full_path}"')
+                        return full_path
                     else:
                         logger.error(f"Failed to download video: {video_response.status_code}")
                         raise Exception(f"Failed to download video: {video_response.text}")
@@ -265,7 +314,6 @@ class AzureOpenAIClient:
             logger.error(f"Error generating video: {str(e)}")
             raise
     
-    def download_video(self, video_url: str, output_path: str) -> str:
         """
         Download the generated video from the provided URL.
         

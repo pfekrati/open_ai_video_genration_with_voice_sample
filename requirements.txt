@@ -2,7 +2,7 @@ openai
 python-dotenv
 azure-identity
 azure-keyvault-secrets
-moviepy
+moviepy==1.0.3
 streamlit
 requests
 pillow

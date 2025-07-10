@@ -115,19 +115,17 @@ def main():
             
             # Step 4: Generate video using Sora
             status_text.text("Step 4/4: Generating video (this may take a while)...")
-            video_url = client.generate_video(sora_instructions)
+            # Show spinner while video is generating
+            with st.spinner("Generating video with AI... This may take several minutes. Please wait."):
+                video_url = client.generate_video(sora_instructions)
             
             # Create timestamped output file
             timestamp = time.strftime("%Y%m%d-%H%M%S")
-            video_path = str(OUTPUT_DIR / f"raw_video_{timestamp}.mp4")
-            
-            # Download the video
-            downloaded_video_path = client.download_video(video_url, video_path)
             
             # Step 5: Combine video and audio
-            status_text.text("Finalizing: Combining video and audio...")
+            status_text.text("Finalizing: Combining video and audio...")``
             final_video_path = str(OUTPUT_DIR / f"final_video_{timestamp}.mp4")
-            final_path = combine_video_and_audio(downloaded_video_path, audio_data, final_video_path)
+            final_path = combine_video_and_audio(video_url, audio_data, final_video_path)
             progress_bar.progress(100)
             
             # Display the final video
