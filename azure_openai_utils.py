@@ -34,7 +34,7 @@ class AzureOpenAIClient:
         self.sora_deployment_name = os.getenv("SORA_DEPLOYMENT_NAME")
 
         # Load TTS-specific configuration (can be different endpoint/key)
-        self.tts_api_key = os.getenv("AZURE_OPENAI_TTS_API_KEY")
+        self.tts_api_key = os.getenv("AZURE_OPENAI_TTS_KEY")
         self.tts_endpoint = os.getenv("AZURE_OPENAI_TTS_ENDPOINT")
         self.tts_deployment_name = os.getenv("TTS_DEPLOYMENT_NAME")
 
