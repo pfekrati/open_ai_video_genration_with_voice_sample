@@ -39,7 +39,6 @@ env/
 
 # Output files
 output/
-*.mp3
 *.mp4
 
 # Jupyter Notebook
