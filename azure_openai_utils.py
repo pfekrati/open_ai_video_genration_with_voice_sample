@@ -76,7 +76,7 @@ class AzureOpenAIClient:
             system_message = """
             You are an expert video script writer. Create a compelling script for voice over video for a 15-second teaser video based on the user's prompt.
             Your narrative should:
-            1. Be concise and impactful (approximately 40 words)
+            1. Be concise and impactful (approximately 35 words)
             2. Have a clear beginning, middle, and end
             3. Use vivid, descriptive language that can be visually represented
             4. Have a natural flow for narration
@@ -204,11 +204,13 @@ class AzureOpenAIClient:
         """
         try:
             # Create system message for Sora instruction generation
-            system_message = """
-            You are an expert at creating prompts for AI video generation models like Sora. Convert the provided narrative into a brief one line 
-            instructions that will produce a high-quality 20-second video sequence.
-            
-            Respond with just the Sora instructions, without any additional commentary.
+            guide_path = os.path.join(os.path.dirname(__file__), "video_generation_guide.md")
+            with open(guide_path, "r", encoding="utf-8") as f:
+                video_guide_content = f.read()
+            system_message = f"""
+            You are an expert at creating prompts for AI video generation models like Sora. Convert the provided narrative into a detailed set of instructions for generating video. Follow these guidelines:
+            {video_guide_content}
+            answer in text and avoid markdown or any special characters. avoid new lines (\n) and maximum of 2000 words.
             """
             
             # Call Azure OpenAI API
@@ -218,12 +220,13 @@ class AzureOpenAIClient:
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": narrative}
                 ],
-                max_tokens=1000,
-                temperature=0.7
+                temperature=0.1,
+                max_tokens=2000
             )
             
             instructions = response.choices[0].message.content.strip()
             logger.info(f"Successfully generated Sora instructions ({len(instructions.split())} words)")
+            instructions = instructions.replace('\n', ' ')
             return instructions
         
         except Exception as e:
@@ -253,6 +256,8 @@ class AzureOpenAIClient:
                 "Content-Type": "application/json"
             }
             
+            logger.info(instructions)
+
             body = {
                 "prompt": instructions,
                 "width": width,
