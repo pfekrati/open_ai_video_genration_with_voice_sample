@@ -66,6 +66,15 @@ streamlit run app.py
 
 6. Preview and download your generated teaser video.
 
+## Example Prompts
+
+Here are some effective prompts to get you started:
+
+- "Create a teaser for a new adventure film set in the Amazon rainforest featuring ancient ruins and hidden treasures."
+- "Generate a product teaser for a revolutionary smart home device that transforms how people interact with their living spaces."
+- "Design a teaser for an upcoming documentary about deep-sea exploration and the mysterious creatures that live there."
+
+
 ## Application Structure
 
 - `app.py`: Main application with Streamlit UI
@@ -73,6 +82,18 @@ streamlit run app.py
 - `video_editor.py`: Functions for video and audio processing
 - `requirements.txt`: List of required Python packages
 - `output/`: Directory where generated videos are saved
+
+## Contributing
+
+Contributions are welcome! To contribute:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please ensure your code follows the project's style guidelines and includes appropriate tests.
 
 ## Notes
 
@@ -86,6 +107,3 @@ streamlit run app.py
 - For production use, consider implementing Azure Key Vault for secure credential management.
 - Be cautious about the content generated with this tool and ensure it complies with Azure OpenAI content policies.
 
-## License
-
-[Your License Information]
