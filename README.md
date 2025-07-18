@@ -15,7 +15,7 @@ This application uses Azure OpenAI services to create compelling teaser videos b
 
 - Azure OpenAI API access with deployments for:
   - GPT-4.1
-  - TTS HD
+  - gpt-4o-mini-tts
   - Sora
 - Python 3.8 or higher
 
@@ -32,7 +32,7 @@ cd open_ai_video_genration_with_voice_sample
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the project directory with your Azure OpenAI API credentials:
+3. Create a `.env` file in the project directory from the .env.template file with your Azure OpenAI API credentials:
 ```
 # Azure OpenAI Configuration
 AZURE_OPENAI_KEY=your_azure_openai_key_here
@@ -42,7 +42,7 @@ AZURE_OPENAI_API_VERSION=2024-02-15-preview
 # GPT 4.1 Model Deployment Name
 GPT_DEPLOYMENT_NAME=your_gpt_deployment_name
 
-# TTS HD Model Configuration
+# TTS Model Deployment Name
 TTS_DEPLOYMENT_NAME=your_tts_deployment_name
 
 # Sora Model Configuration
