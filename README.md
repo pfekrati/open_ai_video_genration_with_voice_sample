@@ -6,7 +6,7 @@ This application uses Azure OpenAI services to create compelling teaser videos b
 
 - Generate engaging 20-second teaser videos from text prompts
 - Create high-quality narrative scripts using GPT-4.1
-- Convert narratives to natural-sounding speech with OpenAI TTS HD
+- Convert narratives to natural-sounding speech with OpenAI TTS (gpt-4o-mini-tts, tts-1 or tts-hd)
 - Generate video content based on the narrative using Azure OpenAI Sora
 - Combine audio and video for a complete teaser experience
 - User-friendly web interface built with Streamlit
